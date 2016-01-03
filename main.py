@@ -11,27 +11,36 @@ def correctify(string):
     return "/"+string[:pos]
 
 def makeDirectory(path):
-    if not os.path.exists(path):
-        #os.mkdir(path)
-        os.mkdir(path)
+    try:
+        if not os.path.exists(path):
+            #os.mkdir(path)
+            os.mkdir(path)
+    except:
+        print(path+" could not be created")
+
 
 
 def downloadSlide(path,curses,pdfUrl_a,name):
-    name = "/"+name
-    if not os.path.exists(path+name):
-        response = curses.get(pdfUrl_a["href"])
-        with open(path+name, "wb") as code:
-            code.write(response.content)
+    try:
+        name = "/"+name
+        if not os.path.exists(path+name):
+            response = curses.get(pdfUrl_a["href"])
+            with open(path+name, "wb") as code:
+                code.write(response.content)
 
-        print(name[1:]+" downloaded.")
-    else:
-        print(name[1:]+" already present.")
+            print(name[1:]+" downloaded.")
+        else:
+            print(name[1:]+" already present.")
+    except:
+        print(name[1:]+" of "+path+" directory could not be downloaded")
 
 def login():
     loginUrl = "http://nalanda.bits-pilani.ac.in/login/index.php"
     curses = requests.session()
 
-    loginInfo = {"username":"f2014053","password":"hhelibebcnofne10"}
+    username = input("Enter username")
+    password = input("Enter password")
+    loginInfo = {"username":username,"password":password}
     response = curses.post(loginUrl,data = loginInfo)
 
     parser = BeautifulSoup(response.content,'html.parser')
@@ -39,6 +48,7 @@ def login():
     return [parser,curses]
 
 def scrape(parser,curses,path):
+    yesmax = input("Do you want to download every slide of every subject?(yes/no)")
     for each in parser.select(".course_title"):
         #print(each.text)
         subj_a = each.find_all("a")[0]
@@ -57,13 +67,19 @@ def scrape(parser,curses,path):
         #print(path+str(subj_title))
         subjPage = curses.get(subj_link)
         #print(subj_title)
-        yes = input("Downloading "+subj_title[1:]+", should it be downloaded?")
+
+
+
         subjParser = BeautifulSoup(subjPage.content,"html.parser")
 
-        if yes != "yes":
+        if yesmax=="no":
+            yes = input("Downloading "+subj_title[1:]+", should it be downloaded?")
+
+        if yesmax=="no" and yes=="no":
             continue
         else:
             makeDirectory(path+str(subj_title))
+            print("Downloading "+subj_title[1:])
             for slide in subjParser.find_all("li",{"class":"activity resource modtype_resource"}):
                 slide_a = slide.find_all("a")[0]
 
