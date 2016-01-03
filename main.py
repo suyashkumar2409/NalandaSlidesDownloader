@@ -7,18 +7,25 @@ import shutil
 import time
 
 def correctify(string):
-    pos = string.index("(")
-    return string[:pos]+"/"
+    pos = string.index("(")-1
+    return "/"+string[:pos]
 
 def makeDirectory(path):
     if not os.path.exists(path):
         #os.mkdir(path)
-        os.makedirs(path)
+        os.mkdir(path)
 
 
-def downloadSlide(path,response,name):
-    with open(path+name, "wb") as code:
-        code.write(response.content)
+def downloadSlide(path,curses,pdfUrl_a,name):
+    name = "/"+name
+    if not os.path.exists(path+name):
+        response = curses.get(pdfUrl_a["href"])
+        with open(path+name, "wb") as code:
+            code.write(response.content)
+
+        print(name[1:]+" downloaded.")
+    else:
+        print(name[1:]+" already present.")
 
 def login():
     loginUrl = "http://nalanda.bits-pilani.ac.in/login/index.php"
@@ -44,32 +51,36 @@ def scrape(parser,curses,path):
 
         subj_link = subj_a["href"]
 
-        print(subj_link)
+        #print(subj_link)
 
-        makeDirectory(path+str(subj_title))
-        print(path+str(subj_title))
+
+        #print(path+str(subj_title))
         subjPage = curses.get(subj_link)
-
+        #print(subj_title)
+        yes = input("Downloading "+subj_title[1:]+", should it be downloaded?")
         subjParser = BeautifulSoup(subjPage.content,"html.parser")
 
-        for slide in subjParser.find_all("li",{"class":"activity resource modtype_resource"}):
-            slide_a = slide.find_all("a")[0]
+        if yes != "yes":
+            continue
+        else:
+            makeDirectory(path+str(subj_title))
+            for slide in subjParser.find_all("li",{"class":"activity resource modtype_resource"}):
+                slide_a = slide.find_all("a")[0]
 
-            slide_title = slide_a.text
-            slide_href = slide_a["href"]
+                slide_title = slide_a.text
+                slide_href = slide_a["href"]
 
-            slidePage = curses.get(slide_href)
+                slidePage = curses.get(slide_href)
 
-            slidePageParser = BeautifulSoup(slidePage.content,"html.parser")
-            pdfUrl_a = slidePageParser.find_all("object")[0].find_all("a")[0]
+                slidePageParser = BeautifulSoup(slidePage.content,"html.parser")
+                pdfUrl_a = slidePageParser.find_all("object")[0].find_all("a")[0]
 
-            pdfResponse = curses.get(pdfUrl_a["href"])
 
-            name=pdfUrl_a.text
+                name=pdfUrl_a.text
 
-            print(name)
-           # time.sleep(10)
-            downloadSlide(path+subj_title,pdfResponse,name)
+               # print(name)
+               # time.sleep(10)
+                downloadSlide(path+subj_title,curses,pdfUrl_a,name)
 
 
 
@@ -78,14 +89,11 @@ def scrape(parser,curses,path):
 
 def main():
 
-    root = "C:/testing/"
+    root = r'C:\Users\Suyash Kumar\Desktop\NalandaSlides'
 
-    temp = "dpn"+"/"
-    makeDirectory(temp)
+    makeDirectory(root)
 
-    root = root +temp
-
-    folderName = "NalandaSlides/"
+    folderName = r'\NalandaSlides'
 
     makeDirectory(root+folderName)
 
