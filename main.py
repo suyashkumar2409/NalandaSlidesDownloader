@@ -3,8 +3,10 @@ __author__ = 'Suyash Kumar'
 from bs4 import BeautifulSoup
 import requests
 import os
-import shutil
-import time
+
+
+root = r'C:\Users\Suyash Kumar\Desktop\NalandaSlides'
+
 
 def correctify(string):
     pos = string.index("(")-1
@@ -43,7 +45,10 @@ def login():
     loginInfo = {"username":username,"password":password}
     response = curses.post(loginUrl,data = loginInfo)
 
-    parser = BeautifulSoup(response.content,'html.parser')
+    try:
+        parser = BeautifulSoup(response.content,'html.parser')
+    except:
+        pass
 
     return [parser,curses]
 
@@ -69,8 +74,10 @@ def scrape(parser,curses,path):
         #print(subj_title)
 
 
-
-        subjParser = BeautifulSoup(subjPage.content,"html.parser")
+        try:
+            subjParser = BeautifulSoup(subjPage.content,"html.parser")
+        except:
+            pass
 
         if yesmax=="no":
             yes = input("Downloading "+subj_title[1:]+", should it be downloaded?")
@@ -81,31 +88,44 @@ def scrape(parser,curses,path):
             makeDirectory(path+str(subj_title))
             print("Downloading "+subj_title[1:])
             for slide in subjParser.find_all("li",{"class":"activity resource modtype_resource"}):
-                slide_a = slide.find_all("a")[0]
+
+                try:
+                    slide_a = slide.find_all("a")[0]
+                except:
+                    pass
+
 
                 slide_title = slide_a.text
                 slide_href = slide_a["href"]
 
                 slidePage = curses.get(slide_href)
 
-                slidePageParser = BeautifulSoup(slidePage.content,"html.parser")
-                pdfUrl_a = slidePageParser.find_all("object")[0].find_all("a")[0]
+                try:
+                    slidePageParser = BeautifulSoup(slidePage.content,"html.parser")
+                except:
+                    pass
+
+                try:
+                    pdfUrl_a = slidePageParser.find_all("object")[0].find_all("a")[0]
+                except:
+                    pass
 
 
                 name=pdfUrl_a.text
 
                # print(name)
                # time.sleep(10)
-                downloadSlide(path+subj_title,curses,pdfUrl_a,name)
+                try:
+                    downloadSlide(path+subj_title,curses,pdfUrl_a,name)
+                except:
+                    pass
 
 
 
 
 
 
-def main():
-
-    root = r'C:\Users\Suyash Kumar\Desktop\NalandaSlides'
+def main(root):
 
     makeDirectory(root)
 
@@ -119,4 +139,4 @@ def main():
     scrape(parser,curses,root+folderName)
 
 
-main()
+main(root)
